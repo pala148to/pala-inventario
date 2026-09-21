@@ -43,51 +43,78 @@ const LOCATIONS = [
   { key:"bloor", label:"Bloor" },
 ];
 
-const CATEGORIES = [
-  { key:"formaggi", label:"Formaggi", icon:"🧀", items:[
-    "Gorgonzola","Bufala","Mascarpone","Provola","Panna","Burrata","Parmigiano",
-    "Stracciatella","Burro","Latte","Fior di latte (panini)","Mozzarella shredded","Fior di latte (pizza)",
-  ]},
-  { key:"affettati", label:"Affettati", icon:"🥩", items:[
-    "Nduja","Turkey","Porchetta","Pepperoni","Pollo","Soppressata",
-    ["Mortadella","2"],"Crudo",["Pancetta","2"],["Salsiccia","1"],
-  ]},
-  { key:"verdure", label:"Verdure / Erbe", icon:"🌿", items:[
-    "Sun-dried tomatoes","Peperoni","Chilli flakes","Prezzemolo","Olive nere tagliate",
-    "Olio d'oliva (box)","Glassa balsamica","Hot sauce","Succo di limone","Pinoli","Pistacchio",
-    "Carciofi (panini)","Aglio","Olio d'oliva al peperoncino","Pomodori","Origano","Lattuga per pollo",
-    "Cipolle","Salsa pomodoro (pizza)","Limone","Miele","Olio di semi (box)",["Mayo","4"],
-    "Pane grattugiato","Melanzane (panini)","Olive",["Basilico","2"],"Rucola",
-    "Olio al tartufo (Dora)","Rosmarino","Lattuga panini","Pomodorini / grape",
-  ]},
-  { key:"drinks", label:"Drinks", icon:"🥤", items:[
-    "Redbull",["S.Pell. Aranciata","2"],["S.Pell. Aranciata Rossa","2"],["S.Pell. Limone","1"],
-    ["S.Pell. Melograno","2"],["S.Pell. Fico","1"],"S.Pell. senza zucchero","Macario chinotto / gazzosa",
-    "Succo",["Coca Cola","3"],["Coca Zero","4"],["Acqua naturale","2"],["Acqua gasata","2"],
-  ]},
-  { key:"forniture", label:"Forniture / Pulizia", icon:"📦", items:[
-    "Post-it","Buste / envelopes","Scouring pads","Straccio per terra","Carta da forno",
-    "Cannucce / straws","Hand sanitizer","Stuzzicadenti","Pellicola / wrap","Spray disinfettante",
-    "Spray cleaner","Spatola","Piping bags premium","Portion cups 2oz (250)","Coperchi portion cups",
-    "4-in-1 kits PP white","Bag Too Good To Go","Box grande","Branded paper","Stainless steel",
-    "Taralli piccole","Contenitori zuppa 18oz","Nicastro salsa bomba","Windex glass cleaner",
-    "Box medium 13in (per 4)","Floor cleaner","Napkins Globe","Bags per suppli","Sacchi spazzatura 35x50",
-    "Bicchieri plastica / paper","Dish soap DAWN","Bags per pizza","Scottex / paper towel",
-    "Candeggina / bleach","Piatti bamboo 8 square","Guanti M / L (box)","Box piccole 8x8","Scotch verde",
-  ]},
-  { key:"prep", label:"Preparazioni", icon:"🍳", items:[
-    ["Rapini","1 box"],"Funghi","Patate","Hot honey","Cipolla caramellata","Pesto fresco",
-    "Supplì pomodoro","Supplì funghi","Supplì cacio e pepe","Supplì carbonara",
-  ]},
-];
+const CATALOGS_RAW = {
+  yorkville: [
+    { key:"formaggi", label:"Formaggi", icon:"🧀", items:[
+      "Bufala","Mascarpone","Burrata","Parmigiano","Stracciatella","Latte",
+      "Fior di latte (panini)","Mozzarella shredded","Fior di latte (pizza)",
+    ]},
+    { key:"affettati", label:"Affettati", icon:"🥩", items:[
+      "Pepperoni","Pollo",["Salsiccia","1"],
+    ]},
+    { key:"verdure", label:"Verdure / Erbe", icon:"🌿", items:[
+      "Peperoni","Chilli flakes","Prezzemolo","Olio d'oliva (box)","Glassa balsamica","Hot sauce",
+      "Pistacchio","Carciofi (panini)","Aglio","Olio d'oliva al peperoncino","Pomodori","Origano",
+      "Lattuga per pollo","Cipolle","Salsa pomodoro (pizza)","Limone","Miele","Olio di semi (box)",
+      ["Mayo","4"],"Pane grattugiato","Melanzane (panini)","Olive",["Basilico","2"],"Rucola",
+      "Olio al tartufo (Dora)","Rosmarino","Lattuga panini","Pomodorini / grape",
+    ]},
+    { key:"drinks", label:"Drinks", icon:"🥤", items:[
+      "Redbull",["S.Pell. Aranciata","2"],["S.Pell. Aranciata Rossa","2"],["S.Pell. Limone","1"],
+      ["S.Pell. Melograno","2"],["S.Pell. Fico","1"],"Macario chinotto / gazzosa",
+      ["Coca Cola","3"],["Coca Zero","4"],["Acqua naturale","2"],["Acqua gasata","2"],
+      "Ciao lime","Ciao peach","Ciao blood orange","Ciao cherry",
+      "Seltz yuzu","Seltz peach","Seltz bergamot","Seltz orange",
+      "Santal pera","Santal pesca e mango","Santal albicocca","Santal pesca",
+    ]},
+    { key:"forniture", label:"Forniture / Pulizia", icon:"📦", items:[
+      "Post-it","Buste / envelopes","Scouring pads","Straccio per terra","Carta da forno",
+      "Cannucce / straws","Hand sanitizer","Stuzzicadenti","Pellicola / wrap","Spray disinfettante",
+      "Spray cleaner","Spatola","Piping bags premium","Portion cups 2oz (250)","Coperchi portion cups",
+      "4-in-1 kits PP white","Bag Too Good To Go","Box grande","Branded paper","Stainless steel",
+      "Taralli piccole","Contenitori zuppa 18oz","Nicastro salsa bomba","Windex glass cleaner",
+      "Box medium 13in (per 4)","Floor cleaner","Napkins Globe","Bags per suppli","Sacchi spazzatura 35x50",
+      "Bicchieri plastica / paper","Dish soap DAWN","Bags per pizza","Scottex / paper towel",
+      "Candeggina / bleach","Piatti bamboo 8 square","Guanti M / L (box)","Box piccole 8x8","Scotch verde",
+    ]},
+    { key:"prep", label:"Preparazioni", icon:"🍳", items:[
+      ["Rapini","1 box"],"Funghi","Patate","Hot honey","Cipolla caramellata","Pesto fresco",
+      "Supplì pomodoro","Supplì funghi","Supplì cacio e pepe","Supplì carbonara",
+    ]},
+  ],
+  bloor: [
+    { key:"formaggi", label:"Formaggi / Latticini", icon:"🧀", items:[
+      "Burro","Latte","Emmental","Provola","Parmigiano",
+    ]},
+    { key:"affettati", label:"Affettati", icon:"🥩", items:[
+      "Tacchino","Porchetta","Soppressata","Mortadella","Crudo","Pancetta","Prosciutto cotto",
+    ]},
+    { key:"verdure", label:"Verdure / Erbe", icon:"🌿", items:[
+      "Rapini","Patate","Cipolle rosse","Funghi","Aglio","Basilico","Prezzemolo","Rosmarino",
+      "Timo","Origano","Pepe nero","Pinoli",
+    ]},
+    { key:"dispensa", label:"Dispensa", icon:"🍝", items:[
+      "Olio d'oliva","Sale","Panko","Spaghetti","Riso Carnaroli","Miele",
+    ]},
+    { key:"drinks", label:"Drinks", icon:"🥤", items:[
+      "Acqua",
+    ]},
+    { key:"forniture", label:"Forniture / Pulizia", icon:"📦", items:[
+      "Guanti","Carta da forno","Dish soap DAWN","Candeggina",
+    ]},
+  ],
+};
 
-CATEGORIES.forEach((cat) => {
-  cat.items = cat.items.map((it, i) => {
-    const name = Array.isArray(it) ? it[0] : it;
-    const par  = Array.isArray(it) ? it[1] : null;
+function normalizeCatalog(cats){
+  return cats.map((cat) => ({ ...cat, items: cat.items.map((it, i) => {
+    let name, par = null;
+    if (Array.isArray(it)) { name = it[0]; par = it[1]; }
+    else if (it && typeof it === "object") { name = it.n; par = it.par || null; }
+    else { name = it; }
     return { id: cat.key + "-" + i, name, par };
-  });
-});
+  }) }));
+}
+const CATALOGS = { yorkville: normalizeCatalog(CATALOGS_RAW.yorkville), bloor: normalizeCatalog(CATALOGS_RAW.bloor) };
 
 const STATUS_ORDER = { "undefined":"low", "low":"out", "out":undefined };
 const STATUS_META = {
@@ -210,17 +237,18 @@ function App(){
 
   const statuses = data[location] || {};
   const updatedAt = meta[location];
-  const flaggedCount = Object.keys(statuses).length;
+  const catalog = CATALOGS[location];
+  const flaggedCount = catalog.reduce((n,cat)=> n + cat.items.filter((it)=> (!it.loc || it.loc.includes(location)) && statuses[it.id]).length, 0);
   const q = query.trim().toLowerCase();
   const locLabel = LOCATIONS.find((l)=>l.key===location).label;
 
   const visibleCats = useMemo(() => {
-    return CATEGORIES.map((cat) => {
-      let items = cat.items.filter((it)=> !q || it.name.toLowerCase().includes(q));
+    return catalog.map((cat) => {
+      let items = cat.items.filter((it)=> (!it.loc || it.loc.includes(location)) && (!q || it.name.toLowerCase().includes(q)));
       if(view==="order") items = items.filter((it)=> statuses[it.id]);
       return { ...cat, items };
     }).filter((cat)=> cat.items.length>0);
-  }, [view, statuses, q]);
+  }, [view, statuses, q, location]);
 
   if(!configured){
     return html`<div style=${{ maxWidth:520, margin:"0 auto", padding:"40px 24px", color:C.ink }}>
