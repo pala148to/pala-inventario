@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="Pala 148" />
+<title>Pala 148 · Inventario</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='14' fill='%23C8442E'/></svg>" />
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; }
+  body { background: #FAF6EF; font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+  input { font: inherit; }
+  button { font: inherit; }
+</style>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/htm@3/dist/htm.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div id="root"></div>
+<script>
+// ============================================================
+//  CONFIG — paste your two Supabase values between the quotes
+// ============================================================
+const SUPABASE_URL = "https://uhduczstbiyfeetgjhgq.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_dCcH-rxqcYW9URfmCDFHPA_TnILCPg3";
+// ============================================================
+
+const { useState, useEffect, useMemo, useCallback, useRef } = React;
+const html = htm.bind(React.createElement);
+
+const C = {
+  paper:"#FAF6EF", card:"#FFFFFF", ink:"#211C16", sub:"#8A7F70", line:"#EBE3D6",
+  red:"#C8442E", ok:"#2E7D52", okBg:"#EAF3EC", low:"#B8801A", lowBg:"#FBF1DC",
+  out:"#C0392B", outBg:"#FBE9E6",
+};
+
+const LOCATIONS = [
+  { key:"yorkville", label:"Yorkville" },
+  { key:"bloor", label:"Bloor" },
+];
+
+const CATALOGS_RAW = {
+  yorkville: [
+    { key:"formaggi", label:"Formaggi", icon:"🧀", items:[
+      "Bufala","Mascarpone","Burrata","Parmigiano","Stracciatella","Latte",
+      "Fior di latte (panini)","Mozzarella shredded","Fior di latte (pizza)",
+    ]},
+    { key:"affettati", label:"Affettati", icon:"🥩", items:[
+      "Pepperoni","Pollo",["Salsiccia","1"],
+    ]},
+    { key:"verdure", label:"Verdure / Erbe", icon:"🌿", items:[
+      "Peperoni","Chilli flakes","Prezzemolo","Olio d'oliva (box)","Glassa balsamica","Hot sauce",
+      "Pistacchio","Carciofi (panini)","Aglio","Olio d'oliva al peperoncino","Pomodori","Origano",
+      "Lattuga per pollo","Cipolle","Salsa pomodoro (pizza)","Limone","Miele","Olio di semi (box)",
+      ["Mayo","4"],"Pane grattugiato","Melanzane (panini)","Olive",["Basilico","2"],"Rucola",
+      "Olio al tartufo (Dora)","Rosmarino","Lattuga panini","Pomodorini / grape",
+    ]},
+    { key:"drinks", label:"Drinks", icon:"🥤", items:[
+      "Redbull",["S.Pell. Aranciata","2"],["S.Pell. Aranciata Rossa","2"],["S.Pell. Limone","1"],
+      ["S.Pell. Melograno","2"],["S.Pell. Fico","1"],"Macario chinotto / gazzosa",
+      ["Coca Cola","3"],["Coca Zero","4"],["Acqua naturale","2"],["Acqua gasata","2"],
+      "Ciao lime","Ciao peach","Ciao blood orange","Ciao cherry",
+      "Seltz yuzu","Seltz peach","Seltz bergamot","Seltz orange",
+      "Santal pera","Santal pesca e mango","Santal albicocca","Santal pesca",
+    ]},
+    { key:"forniture", label:"Forniture / Pulizia", icon:"📦", items:[
+      "Post-it","Buste / envelopes","Scouring pads","Straccio per terra","Carta da forno",
+      "Cannucce / straws","Hand sanitizer","Stuzzicadenti","Pellicola / wrap","Spray disinfettante",
+      "Spray cleaner","Spatola","Piping bags premium","Portion cups 2oz (250)","Coperchi portion cups",
+      "4-in-1 kits PP white","Bag Too Good To Go","Box grande","Branded paper","Stainless steel",
+      "Taralli piccole","Contenitori zuppa 18oz","Nicastro salsa bomba","Windex glass cleaner",
+      "Box medium 13in (per 4)","Floor cleaner","Napkins Globe","Bags per suppli","Sacchi spazzatura 35x50",
+      "Bicchieri plastica / paper","Dish soap DAWN","Bags per pizza","Scottex / paper towel",
+      "Candeggina / bleach","Piatti bamboo 8 square","Guanti M / L (box)","Box piccole 8x8","Scotch verde",
+    ]},
+    { key:"prep", label:"Preparazioni", icon:"🍳", items:[
+      ["Rapini","1 box"],"Funghi","Patate","Hot honey","Cipolla caramellata","Pesto fresco",
+      "Supplì pomodoro","Supplì funghi","Supplì cacio e pepe","Supplì carbonara",
+    ]},
+  ],
+  bloor: [
+    { key:"formaggi", label:"Formaggi / Latticini", icon:"🧀", items:[
+      "Burro","Latte","Emmental","Provola","Parmigiano",
+    ]},
+    { key:"affettati", label:"Affettati", icon:"🥩", items:[
+      "Tacchino","Porchetta","Soppressata","Mortadella","Crudo","Pancetta","Prosciutto cotto",
+    ]},
+    { key:"verdure", label:"Verdure / Erbe", icon:"🌿", items:[
+      "Rapini","Patate","Cipolle rosse","Funghi","Aglio","Basilico","Prezzemolo","Rosmarino",
+      "Timo","Origano","Pepe nero","Pinoli",
+    ]},
+    { key:"dispensa", label:"Dispensa", icon:"🍝", items:[
+      "Olio d'oliva","Sale","Panko","Spaghetti","Riso Carnaroli","Miele",
+    ]},
+    { key:"drinks", label:"Drinks", icon:"🥤", items:[
+      "Acqua",
+    ]},
+    { key:"forniture", label:"Forniture / Pulizia", icon:"📦", items:[
+      "Guanti","Carta da forno","Dish soap DAWN","Candeggina",
+    ]},
+  ],
+};
+
+function normalizeCatalog(cats){
+  return cats.map((cat) => ({ ...cat, items: cat.items.map((it, i) => {
+    let name, par = null;
+    if (Array.isArray(it)) { name = it[0]; par = it[1]; }
+    else if (it && typeof it === "object") { name = it.n; par = it.par || null; }
+    else { name = it; }
+    return { id: cat.key + "-" + i, name, par };
+  }) }));
+}
+const CATALOGS = { yorkville: normalizeCatalog(CATALOGS_RAW.yorkville), bloor: normalizeCatalog(CATALOGS_RAW.bloor) };
+
+const STATUS_ORDER = { "undefined":"low", "low":"out", "out":undefined };
+const STATUS_META = {
+  low: { label:"Poco",   color:C.low, bg:C.lowBg },
+  out: { label:"Finito", color:C.out, bg:C.outBg },
+};
+
+function timeAgo(ts){
+  if(!ts) return null;
+  const s = Math.floor((Date.now()-ts)/1000);
+  if(s<60) return "adesso";
+  if(s<3600) return Math.floor(s/60)+" min fa";
+  if(s<86400) return Math.floor(s/3600)+" h fa";
+  return Math.floor(s/86400)+" g fa";
+}
+
+const configured = SUPABASE_URL.indexOf("YOUR_") === -1 && SUPABASE_ANON_KEY.indexOf("YOUR_") === -1;
+const sb = configured ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+function Dot({ color }) {
+  return html`<span style=${{ width:8, height:8, borderRadius:"50%", background:color, display:"inline-block" }} />`;
+}
+function Chip({ color, bg, label }) {
+  return html`<span style=${{ display:"inline-flex", alignItems:"center", gap:5, fontWeight:700, color, background:bg, borderRadius:20, padding:"2px 9px", fontSize:11 }}>
+    <${Dot} color=${color}/>${label}</span>`;
+}
+function Tab({ active, onClick, label, count }) {
+  return html`<button onClick=${onClick} style=${{
+    flex:1, display:"inline-flex", alignItems:"center", justifyContent:"center", gap:6,
+    padding:"9px 8px", borderRadius:10, cursor:"pointer", fontSize:14, fontWeight:700,
+    border:"1px solid "+(active?C.ink:C.line), background:active?C.ink:C.card, color:active?"#fff":C.sub }}>
+    ${label}
+    ${count>0 ? html`<span style=${{ fontSize:11, fontWeight:800, borderRadius:20, padding:"0px 6px",
+      background:active?C.red:C.outBg, color:active?"#fff":C.red }}>${count}</span>` : null}
+  </button>`;
+}
+
+function App(){
+  const [location, setLocation] = useState("yorkville");
+  const [data, setData] = useState({ yorkville:{}, bloor:{} });
+  const [meta, setMeta] = useState({ yorkville:null, bloor:null });
+  const [loading, setLoading] = useState(true);
+  const [online, setOnline] = useState(true);
+  const [view, setView] = useState("all");
+  const [query, setQuery] = useState("");
+  const [collapsed, setCollapsed] = useState({});
+  const [confirmReset, setConfirmReset] = useState(false);
+
+  const fetchAll = useCallback(async () => {
+    if(!sb) { setLoading(false); return; }
+    try {
+      const { data:rows, error } = await sb.from("inventory_flags").select("location,item_id,status,updated_at");
+      if(error) throw error;
+      const nextData = { yorkville:{}, bloor:{} };
+      const nextMeta = { yorkville:null, bloor:null };
+      (rows||[]).forEach((r) => {
+        if(!nextData[r.location]) nextData[r.location] = {};
+        nextData[r.location][r.item_id] = r.status;
+        const t = new Date(r.updated_at).getTime();
+        if(!nextMeta[r.location] || t > nextMeta[r.location]) nextMeta[r.location] = t;
+      });
+      setData(nextData); setMeta(nextMeta); setOnline(true);
+    } catch(e){ console.error(e); setOnline(false); }
+    finally { setLoading(false); }
+  }, []);
+
+  useEffect(() => {
+    fetchAll();
+    if(!sb) return;
+    const ch = sb.channel("inv")
+      .on("postgres_changes", { event:"*", schema:"public", table:"inventory_flags" }, () => fetchAll())
+      .subscribe();
+    return () => { sb.removeChannel(ch); };
+  }, [fetchAll]);
+
+  const setFlag = useCallback(async (loc, id, status) => {
+    setMeta((m) => ({ ...m, [loc]: Date.now() }));
+    if(!sb) return;
+    try {
+      if(status){
+        await sb.from("inventory_flags").upsert(
+          { location:loc, item_id:id, status, updated_at:new Date().toISOString() },
+          { onConflict:"location,item_id" });
+      } else {
+        await sb.from("inventory_flags").delete().match({ location:loc, item_id:id });
+      }
+      setOnline(true);
+    } catch(e){ console.error(e); setOnline(false); }
+  }, []);
+
+  const cycle = useCallback((id) => {
+    setData((prev) => {
+      const cur = prev[location] || {};
+      const nextVal = STATUS_ORDER[String(cur[id])];
+      const locNext = { ...cur };
+      if(nextVal) locNext[id] = nextVal; else delete locNext[id];
+      setFlag(location, id, nextVal);
+      return { ...prev, [location]: locNext };
+    });
+  }, [location, setFlag]);
+
+  const markDone = useCallback((id) => {
+    setData((prev) => {
+      const locNext = { ...(prev[location]||{}) };
+      delete locNext[id];
+      setFlag(location, id, undefined);
+      return { ...prev, [location]: locNext };
+    });
+  }, [location, setFlag]);
+
+  const doReset = useCallback(async () => {
+    const ids = Object.keys(data[location]||{});
+    setData((prev) => ({ ...prev, [location]: {} }));
+    setMeta((m) => ({ ...m, [location]: Date.now() }));
+    setConfirmReset(false);
+    if(!sb) return;
+    try { await sb.from("inventory_flags").delete().eq("location", location); setOnline(true); }
+    catch(e){ console.error(e); setOnline(false); }
+  }, [data, location]);
+
+  const statuses = data[location] || {};
+  const updatedAt = meta[location];
+  const catalog = CATALOGS[location];
+  const flaggedCount = catalog.reduce((n,cat)=> n + cat.items.filter((it)=> (!it.loc || it.loc.includes(location)) && statuses[it.id]).length, 0);
+  const q = query.trim().toLowerCase();
+  const locLabel = LOCATIONS.find((l)=>l.key===location).label;
+
+  const visibleCats = useMemo(() => {
+    return catalog.map((cat) => {
+      let items = cat.items.filter((it)=> (!it.loc || it.loc.includes(location)) && (!q || it.name.toLowerCase().includes(q)));
+      if(view==="order") items = items.filter((it)=> statuses[it.id]);
+      return { ...cat, items };
+    }).filter((cat)=> cat.items.length>0);
+  }, [view, statuses, q, location]);
+
+  if(!configured){
+    return html`<div style=${{ maxWidth:520, margin:"0 auto", padding:"40px 24px", color:C.ink }}>
+      <div style=${{ width:30, height:30, borderRadius:"50%", background:C.red, marginBottom:16 }}></div>
+      <h2 style=${{ margin:"0 0 8px" }}>Manca la configurazione</h2>
+      <p style=${{ color:C.sub, lineHeight:1.5 }}>Apri <b>index.html</b> e incolla i due valori di Supabase
+      (<b>SUPABASE_URL</b> e <b>SUPABASE_ANON_KEY</b>) in cima al file, poi ricarica.</p>
+    </div>`;
+  }
+
+  return html`<div style=${{ minHeight:"100vh", background:C.paper, color:C.ink }}>
+    <div style=${{ maxWidth:560, margin:"0 auto", paddingBottom:96 }}>
+
+      <header style=${{ position:"sticky", top:0, zIndex:20, background:C.paper, borderBottom:"1px solid "+C.line, padding:"14px 16px 10px" }}>
+        <div style=${{ display:"flex", alignItems:"center", gap:10 }}>
+          <span style=${{ width:26, height:26, borderRadius:"50%", background:C.red, flexShrink:0 }}></span>
+          <div style=${{ lineHeight:1.05 }}>
+            <div style=${{ fontWeight:800, fontSize:17, letterSpacing:"-0.01em" }}>Pala 148</div>
+            <div style=${{ fontSize:11, color:C.sub, textTransform:"uppercase", letterSpacing:"0.12em", fontWeight:600 }}>Inventario</div>
+          </div>
+          <div style=${{ marginLeft:"auto", display:"flex", background:C.card, border:"1px solid "+C.line, borderRadius:10, padding:3, gap:3 }}>
+            ${LOCATIONS.map((loc)=> html`<button key=${loc.key} onClick=${()=>setLocation(loc.key)} style=${{
+              padding:"6px 12px", borderRadius:8, border:"none", cursor:"pointer", fontSize:13, fontWeight:700,
+              background: location===loc.key ? C.red : "transparent", color: location===loc.key ? "#fff" : C.sub }}>
+              ${loc.label}</button>`)}
+          </div>
+        </div>
+
+        <div style=${{ display:"flex", alignItems:"center", gap:8, marginTop:12 }}>
+          <${Tab} active=${view==="all"} onClick=${()=>setView("all")} label="Tutto" />
+          <${Tab} active=${view==="order"} onClick=${()=>setView("order")} label="Da ordinare" count=${flaggedCount} />
+          <button onClick=${fetchAll} title="Aggiorna" style=${{ background:"transparent", border:"none", padding:6, borderRadius:8, cursor:"pointer", fontSize:18, color:C.sub }}>↻</button>
+        </div>
+        <div style=${{ fontSize:11, color: online?C.sub:C.out, marginTop:6, height:14 }}>
+          ${ loading ? "Carico…" : online ? (updatedAt ? "Aggiornato "+timeAgo(updatedAt) : "Sincronizzato") : "Offline — controlla la connessione" }
+        </div>
+
+        <div style=${{ position:"relative", marginTop:4 }}>
+          <span style=${{ position:"absolute", left:12, top:9, color:C.sub, fontSize:15 }}>⌕</span>
+          <input value=${query} onChange=${(e)=>setQuery(e.target.value)} placeholder="Cerca un prodotto…"
+            style=${{ width:"100%", padding:"9px 34px 9px 32px", borderRadius:10, border:"1px solid "+C.line, background:C.card, fontSize:15, color:C.ink, outline:"none" }} />
+          ${ query ? html`<button onClick=${()=>setQuery("")} style=${{ position:"absolute", right:6, top:6, background:"transparent", border:"none", padding:6, cursor:"pointer", color:C.sub, fontSize:14 }}>✕</button>` : null }
+        </div>
+      </header>
+
+      <div style=${{ padding:"10px 16px 2px", display:"flex", alignItems:"center", gap:12, fontSize:12, color:C.sub, flexWrap:"wrap" }}>
+        ${ view==="order"
+          ? html`<span>Tocca un prodotto quando l'hai ricomprato per toglierlo dalla lista.</span>`
+          : html`<span>Tocca per cambiare:</span>
+              <${Chip} color=${C.ok} bg=${C.okBg} label="A posto" />
+              <${Chip} color=${C.low} bg=${C.lowBg} label="Poco" />
+              <${Chip} color=${C.out} bg=${C.outBg} label="Finito" />` }
+      </div>
+
+      <main style=${{ padding:"8px 12px 0" }}>
+        ${ visibleCats.length===0 ? html`<div style=${{ textAlign:"center", padding:"48px 24px", color:C.sub }}>
+            ${ view==="order"
+              ? html`<div><div style=${{ fontSize:32, marginBottom:8 }}>✅</div>Niente da ordinare per ${locLabel}.</div>`
+              : html`<div>Nessun prodotto trovato per “${query}”.</div>` }
+          </div>` : null }
+
+        ${ visibleCats.map((cat) => {
+          const isCollapsed = collapsed[cat.key];
+          const flaggedInCat = cat.items.filter((it)=> statuses[it.id]).length;
+          return html`<section key=${cat.key} style=${{ marginBottom:14 }}>
+            <button onClick=${()=>setCollapsed((c)=>({ ...c, [cat.key]: !c[cat.key] }))} style=${{
+              width:"100%", display:"flex", alignItems:"center", gap:8, background:"transparent", border:"none", padding:"6px 4px", cursor:"pointer", color:C.ink }}>
+              <span style=${{ fontSize:16 }}>${cat.icon}</span>
+              <span style=${{ fontWeight:700, fontSize:14 }}>${cat.label}</span>
+              ${ flaggedInCat>0 ? html`<span style=${{ fontSize:11, fontWeight:700, color:C.red, background:C.outBg, borderRadius:20, padding:"1px 7px" }}>${flaggedInCat}</span>` : null }
+              <span style=${{ marginLeft:"auto", fontSize:12, color:C.sub }}>${ isCollapsed ? "▸" : "▾" }</span>
+            </button>
+
+            ${ !isCollapsed ? html`<div style=${{ background:C.card, borderRadius:12, border:"1px solid "+C.line, overflow:"hidden" }}>
+              ${ cat.items.map((it, idx) => {
+                const st = statuses[it.id];
+                const m = st ? STATUS_META[st] : null;
+                const isOrderView = view==="order";
+                return html`<button key=${it.id} onClick=${()=> isOrderView ? markDone(it.id) : cycle(it.id)} style=${{
+                  width:"100%", display:"flex", alignItems:"center", gap:10, textAlign:"left", padding:"11px 12px", cursor:"pointer",
+                  background: m ? m.bg : C.card, border:"none",
+                  borderTop: idx===0 ? "none" : "1px solid "+C.line,
+                  borderLeft: "4px solid "+(m ? m.color : "transparent") }}>
+                  <span style=${{ fontSize:15, fontWeight: m?600:500, color:C.ink, flex:1 }}>
+                    ${it.name}${ it.par ? html`<span style=${{ fontSize:11, color:C.sub, fontWeight:600, marginLeft:8 }}>·${it.par}</span>` : null }
+                  </span>
+                  ${ isOrderView
+                    ? html`<span style=${{ display:"inline-flex", alignItems:"center", gap:6 }}>
+                        <span style=${{ fontSize:12, fontWeight:700, color:m.color }}>${m.label}</span>
+                        <span style=${{ display:"inline-flex", alignItems:"center", gap:4, fontSize:12, fontWeight:700, color:C.ok, background:C.okBg, borderRadius:20, padding:"4px 9px" }}>✓ Fatto</span>
+                      </span>`
+                    : m
+                      ? html`<span style=${{ display:"inline-flex", alignItems:"center", gap:5, fontSize:12, fontWeight:700, color:m.color }}><${Dot} color=${m.color}/> ${m.label}</span>`
+                      : html`<span style=${{ color:C.ok, opacity:0.45, fontSize:15 }}>✓</span>` }
+                </button>`;
+              }) }
+            </div>` : null }
+          </section>`;
+        }) }
+      </main>
+    </div>
+
+    ${ flaggedCount>0 ? html`<div style=${{ position:"fixed", bottom:0, left:0, right:0, zIndex:30, background:C.card, borderTop:"1px solid "+C.line, padding:"10px 16px", boxShadow:"0 -2px 12px rgba(0,0,0,0.04)" }}>
+      <div style=${{ maxWidth:560, margin:"0 auto", width:"100%", display:"flex", alignItems:"center", gap:12 }}>
+        <span style=${{ fontSize:13, color:C.ink, fontWeight:600 }}>${flaggedCount} da ordinare · ${locLabel}</span>
+        <button onClick=${()=>setConfirmReset(true)} style=${{ marginLeft:"auto", display:"inline-flex", alignItems:"center", gap:6, background:"transparent", border:"1px solid "+C.line, borderRadius:9, padding:"8px 12px", fontSize:13, fontWeight:600, color:C.sub, cursor:"pointer" }}>↺ Svuota lista</button>
+      </div>
+    </div>` : null }
+
+    ${ confirmReset ? html`<div onClick=${()=>setConfirmReset(false)} style=${{ position:"fixed", inset:0, zIndex:50, background:"rgba(33,28,22,0.45)", display:"flex", alignItems:"center", justifyContent:"center", padding:24 }}>
+      <div onClick=${(e)=>e.stopPropagation()} style=${{ background:C.card, borderRadius:16, padding:22, maxWidth:340, width:"100%", boxShadow:"0 12px 40px rgba(0,0,0,0.2)" }}>
+        <div style=${{ fontWeight:800, fontSize:17, marginBottom:6 }}>Svuotare la lista?</div>
+        <div style=${{ fontSize:14, color:C.sub, lineHeight:1.4, marginBottom:18 }}>Rimette tutti i prodotti di <b style=${{ color:C.ink }}>${locLabel}</b> su “a posto”. Usalo dopo aver fatto l'ordine.</div>
+        <div style=${{ display:"flex", gap:10 }}>
+          <button onClick=${()=>setConfirmReset(false)} style=${{ flex:1, padding:"11px", borderRadius:10, border:"1px solid "+C.line, background:C.card, fontSize:14, fontWeight:700, color:C.sub, cursor:"pointer" }}>Annulla</button>
+          <button onClick=${doReset} style=${{ flex:1, padding:"11px", borderRadius:10, border:"none", background:C.red, fontSize:14, fontWeight:700, color:"#fff", cursor:"pointer" }}>Svuota</button>
+        </div>
+      </div>
+    </div>` : null }
+  </div>`;
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(html`<${App} />`);
+</script>
+</body>
+</html>
